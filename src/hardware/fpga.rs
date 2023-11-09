@@ -48,8 +48,6 @@ pub fn fpga_lattice_init() -> Result<(), io::Error> {
     }
 }
 
-pub fn fpga_stepper_control() -> Result<(), io::Error> {}
-
 pub fn fpga_display_get_resolution_and_version() -> Result<(), io::Error> {
     let mut buffer = [0u8; 20];
     fpga_set_command_mode(0)?;
@@ -76,13 +74,13 @@ pub fn fpga_pwn_set_duty() -> Result<(), io::Error> {
     Ok(())
 }
 
-fn fpga_set_command_mode(i: u8) -> Result<(), io::Error> {
+pub fn fpga_set_command_mode(i: u8) -> Result<(), io::Error> {
     let pin_56 = gpio::set_gpio_direction(0x56, Direction::Out)?;
     pin_56.set_value(i).unwrap();
     return Ok(());
 }
 
-fn fpga_spi_write(i: &[u8]) -> io::Result<usize> {
+pub fn fpga_spi_write(i: &[u8]) -> io::Result<usize> {
     let mut spi = get_spi().unwrap();
     spi.write(i)
 }
