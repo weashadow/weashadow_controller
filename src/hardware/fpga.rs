@@ -1,5 +1,6 @@
 extern crate spidev;
-use std::io;
+use std::str::FromStr;
+use std::{io, result};
 use std::io::prelude::*;
 
 use crate::hardware::gpio;
@@ -88,4 +89,53 @@ pub fn fpga_spi_write(i: &[u8]) -> io::Result<usize> {
 fn fpga_spi_read(i: &mut [u8]) -> io::Result<usize> {
     let mut spi = get_spi().unwrap();
     spi.read(i)
+}
+
+pub enum StepperDirection {
+    UP,
+    DOWN
+}
+
+impl FromStr for StepperDirection {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<StepperDirection, ()> {
+        match s {
+            "up" => Ok(StepperDirection::UP),
+            "down" => Ok(StepperDirection::DOWN),
+            _ => Err(()),
+        }
+    }
+}
+
+
+// distance by mm
+pub fn fpga_stepper_control(distance: u32, speed: u16, direction: StepperDirection) -> Result<u64, io::Error> {
+    // Speed
+    let f0 = 671;
+    let df = 400;
+    let s = (speed - f0) / df;
+    let speed_result = s.wrapping_add(2).wrapping_shl(8) | s.wrapping_add(2).wrapping_shr(8) & 0xff;
+    println!("Speed {:#0x}", speed_result);
+
+    // Distance
+    let base = 800;
+    let d:u32 = distance * base;
+    let distance_result = (d & 0xff) << 8 | (d >> 8) & 0xff;
+    println!("Distance {:#0x}", distance_result);
+
+    // Direction
+    let direction_result:u16 = match direction {
+        StepperDirection::UP => 0x0000,
+        StepperDirection::DOWN => 0x8000
+    };
+
+    // Command
+    let command: u16 = 0x01fe;
+
+    let result: u64 = u64::from(speed_result).wrapping_shl(48) + u64::from(distance_result).wrapping_shl(32) + u64::from(direction_result).wrapping_shl(16) + u64::from(command);
+    return Ok(result);
+// const data_to_move_axis_by_10mm_up = 0x1400401f000001fe
+
+
 }
