@@ -27,10 +27,7 @@ impl BuildScreen {
         let command = [0xfd, 0xfe];
         self.spi.borrow_mut().send(&command).unwrap();
 
-        // Send data in chunks of length 0x200
-        for chunk in data.chunks(0x200) {
-            self.spi.borrow_mut().send(chunk).unwrap();
-        }
+        self.spi.borrow_mut().send_image_data(data).unwrap();
 
         let command = [0x8, 0xfe];
         self.spi.borrow_mut().send(&command).unwrap();

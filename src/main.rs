@@ -19,7 +19,7 @@ struct Args {
     #[arg(short, long, default_value_t = 0 )]
     uv_light: u8,
 
-    /// Show image located in /customer/resource/***.bin */ the image is not properly displayed right now, I don't know why
+    /// Show image located in /customer/resource/***.bin  argurment shoud be file path
     #[arg(short, long, default_value = "")]
     show_image: String,
 

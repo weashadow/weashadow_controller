@@ -17,6 +17,15 @@ impl Spi {
         Ok(Spi { spi })
     }
 
+    pub fn send_image_data(&mut self, data: &[u8]) -> io::Result<()> {
+        // send per 0x200
+        for chunk in data.chunks(0x200) {
+            self.spi.write(chunk).unwrap();
+        }
+
+        Ok(())
+    }
+
     pub fn send(&mut self, data: &[u8]) -> io::Result<usize> {
         // reverse data for little endian
         let mut data = data.to_vec();
