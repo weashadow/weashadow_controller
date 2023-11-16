@@ -1,59 +1,62 @@
 // insert its contents inside a module named `my` under this scope
 mod hardware;
-use std::io::{self, Write};
+use std::{thread, time::Duration, fs};
 
-use crate::hardware::fpga::{fpga_set_command_mode, fpga_spi_write, StepperDirection, fpga_stepper_control};
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Move axis: multiple by 0.1 mm
+    #[arg(short, long, default_value_t = 0, allow_hyphen_values = true)]
+    move_axis: i8,
+
+    /// Get current position
+    #[arg(short, long)]
+    position: bool,
+
+    /// UV Light: 0-255
+    #[arg(short, long, default_value_t = 0 )]
+    uv_light: u8,
+
+    /// Show image located in /customer/resource/***.bin */ the image is not properly displayed right now, I don't know why
+    #[arg(short, long, default_value = "")]
+    show_image: String,
+
+}
 
 fn main() {
-    io::stdout().flush().unwrap();  // flush the output buffer to ensure the prompt is displayed
+    let mut hardware = hardware::Hardware::new().unwrap();
 
-    let mut distance = String::new();
-    let mut direction = String::new();
+    let args = Args::parse();
 
-    println!("Please enter a distance in mm:");
-    io::stdin().read_line(&mut distance).unwrap();
-    let distance: u32 = distance.trim().parse().expect("Please enter a valid number!");
-
-    println!("Please enter a direction (up/down):");
-    io::stdin().read_line(&mut direction).unwrap();
-    let direction: StepperDirection = direction.trim().parse().expect("Please enter a valid direction!");
-
-    match direction {
-        StepperDirection::UP => println!("Moving {}mm up", distance),
-        StepperDirection::DOWN => println!("Moving {}mm down", distance),
+    if args.move_axis != 0 {
+        if args.move_axis > 0 {
+            println!("Moving Up {:?} * 0.1 mm ", args.move_axis);
+            hardware.axis.move_axis(args.move_axis as u32, 5400, hardware::axis::AxisDirection::UP).unwrap();
+        }
+        else {
+            println!("Moving Down {:?} * 0.1 mm", -args.move_axis);
+            hardware.axis.move_axis((-args.move_axis) as u32, 5400, hardware::axis::AxisDirection::DOWN).unwrap();
+        }
+    }
+    // delay 1000ms
+    thread::sleep(Duration::from_millis(1000));
+    if args.position {
+        let pos = hardware.axis.get_position_in_micrometer().unwrap();
+        println!("Position: {:?} micro meter", pos);
+    } 
+    if args.uv_light != 0 {
+        println!("UV Light: {:?} ", args.uv_light);
+        hardware.uv_light.enable(args.uv_light).unwrap();
+    } else {
+        hardware.uv_light.disable();
+    }
+    if args.show_image != "" {
+        println!("Show Image: {:?}", args.show_image);
+        let data = fs::read(args.show_image).unwrap();
+        let data = &data[0x30..];
+        hardware.build_screen.borrow_mut().display_image_data(data);
     }
 
-    let mut command = fpga_stepper_control(distance, 8000, direction).unwrap().to_be_bytes();
-    let hex_string: String = command.iter()
-                                   .map(|b| format!("{:02x}", b))
-                                   .collect::<Vec<String>>()
-                                   .join("");
-    println!("The bytes: {}", hex_string);
-    command.reverse();
-
-    print!("Are you sure you want to proceed? (y/n): ");
-    io::stdout().flush().unwrap(); // Flush stdout to display the prompt immediately
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-
-    // Trim newline and check response
-    match input.trim() {
-        "y" | "Y" | "yes" | "Yes" => {
-            // User confirmed, proceed
-            fpga_spi_write(&command).unwrap();
-            // Add the code you want to execute here
-        },
-        _ => {
-            // User did not confirm, do not proceed
-            println!("Exiting");
-        },
-    }
-
-    
-    // let _ = hardware::gpio::set_gpio_direction(0x56, Direction::Out).unwrap();
-    // let _ = hardware::spi::create_spi().unwrap();
-    // let _ = hardware::fpga::fpga_lattice_init().unwrap();
-    // let _ = hardware::lt9711::lt9711_init().unwrap();
-    // hardware::fpga::fpga_display_get_resolution_and_version().unwrap();
 }
