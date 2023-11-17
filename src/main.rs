@@ -1,5 +1,5 @@
-// insert its contents inside a module named `my` under this scope
 mod hardware;
+mod ui;
 use std::{thread, time::Duration, fs};
 
 use clap::Parser;
@@ -23,6 +23,8 @@ struct Args {
     #[arg(short, long, default_value = "")]
     show_image: String,
 
+    #[arg(short, long)]
+    framebuffer_info: bool,
 }
 
 fn main() {
@@ -57,6 +59,9 @@ fn main() {
         let data = fs::read(args.show_image).unwrap();
         let data = &data[0x30..];
         hardware.build_screen.borrow_mut().display_image_data(data);
+    }
+    if args.framebuffer_info {
+        ui::command::command().unwrap();
     }
 
 }
