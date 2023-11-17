@@ -24,7 +24,7 @@ struct Args {
     show_image: String,
 
     #[arg(short, long)]
-    framebuffer_info: bool,
+    display: bool,
 }
 
 fn main() {
@@ -60,8 +60,8 @@ fn main() {
         let data = &data[0x30..];
         hardware.build_screen.borrow_mut().display_image_data(data);
     }
-    if args.framebuffer_info {
-        ui::command::command().unwrap();
+    if args.display {
+        ui::ui::display().unwrap();
     }
 
 }

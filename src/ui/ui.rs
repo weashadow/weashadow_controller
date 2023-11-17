@@ -1,45 +1,70 @@
 extern crate alloc;
-use alloc::{rc::Rc, boxed::Box};
-use slint::platform::{Platform, software_renderer::MinimalSoftwareWindow};
+use std::{
+    io::{self, Write},
+    time::{self, Instant},
+};
+
+use alloc::rc::Rc;
+use framebuffer::Framebuffer;
+use slint::platform::{software_renderer::MinimalSoftwareWindow, Platform };
 
 slint::include_modules!();
 
-struct MyPlatform {
+const DISPLAY_WIDTH: usize = 800;
+const DISPLAY_HEIGHT: usize = 480;
+
+struct TouchScreen {
     window: Rc<MinimalSoftwareWindow>,
-    // optional: some timer device from your device's HAL crate
+    framebuffer: Framebuffer,
+    timer: time::Instant,
 }
 
-impl Platform for MyPlatform {
-    fn create_window_adapter(&self) -> Result<Rc<dyn slint::platform::WindowAdapter>, slint::PlatformError> {
-        // Since on MCUs, there can be only one window, just return a clone of self.window.
-        // We'll also use the same window in the event loop.
+impl Platform for TouchScreen {
+    fn create_window_adapter(
+        &self,
+    ) -> Result<Rc<dyn slint::platform::WindowAdapter>, slint::PlatformError> {
         Ok(self.window.clone())
     }
-    // optional: You can put the event loop there, or in the main function, see later
+    fn duration_since_start(&self) -> core::time::Duration {
+        self.timer.elapsed()
+    }
     fn run_event_loop(&self) -> Result<(), slint::PlatformError> {
-        todo!();
+        loop {
+        }
     }
 }
 
-// #[hal::entry]
-fn display() {
-    // Initialize the heap allocator, peripheral devices and other things.
-    // ...
+pub fn display() -> io::Result<()> {
+    let mut framebuffer = Framebuffer::new("/dev/fb0").unwrap();
+    let h = framebuffer.var_screen_info.yres;
+    let line_length = framebuffer.fix_screen_info.line_length;
+    let bytespp = framebuffer.var_screen_info.bits_per_pixel / 8;
 
-    // Initialize a window (we'll need it later).
-    let window = MinimalSoftwareWindow::new(Default::default());
-    slint::platform::set_platform(Box::new(MyPlatform {
+    println!(
+        "h: {}, line_length: {}, bytespp: {}",
+        h, line_length, bytespp
+    );
+
+    // let mut frame = vec![0u8; 3072000 as usize];
+    // frame.fill(0xff);
+    // let _ = framebuffer.write_frame(&frame);
+
+    let window = MinimalSoftwareWindow::new(
+        slint::platform::software_renderer::RepaintBufferType::ReusedBuffer,
+    );
+
+    slint::platform::set_platform(Box::new(TouchScreen {
         window: window.clone(),
-        //...
+        framebuffer,
+        timer: Instant::now(),
     }))
     .unwrap();
 
-    // Setup the UI.
-    // let ui = MyUI::new();
+    let ui = AppWindow::new();
     // ... setup callback and properties on `ui` ...
 
     // Make sure the window covers our entire screen.
-    window.set_size(slint::PhysicalSize::new(800, 640));
+    window.set_size(slint::PhysicalSize::new(320, 240));
 
-    // ... start event loop (see later) ...
+    Ok(())
 }
