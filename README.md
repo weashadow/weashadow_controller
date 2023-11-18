@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Get control of the 3d printer hardware
-- [*] 12K sceren
-- [*] UV light
-- [*] Z axis
-- [*] Touch screen framebuffer
+- [x] 12K sceren
+- [x] UV light
+- [x] Z axis
+- [x] Touch screen framebuffer
 - [ ] Touch screen tslib
 - [ ] 24V usb power
 
