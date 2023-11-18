@@ -10,11 +10,28 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  release:
+    name: Release - ${{ matrix.platform.release_for }}
+    strategy:
+      matrix:
+        platform:
+          - release_for: Armv7 Linux
+            os: ubuntu-20.04
+            target: armv7-unknown-linux-musleabihf
+            bin: ultraultra
+            name: ultraultra.tar.gz
+            command: build
 
-    runs-on: ubuntu-latest
-
+    runs-on: ${{ matrix.platform.os }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: ${{ matrix.platform.command }}
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release"
+          strip: true
+
+    # more packaging stuff goes here ...
