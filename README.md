@@ -1,3 +1,19 @@
+# Roadmap
+
+## Get control of the 3d printer hardware
+- [*] 12K sceren
+- [*] UV light
+- [*] Z axis
+- [*] Touch screen framebuffer
+- [ ] Touch screen tslib
+- [ ] 24V usb power
+
+## Custom controller software
+- [ ] Read and parse goo file format
+- [ ] Http server to provide a web interface
+- [ ] A set of UI components to control the printer
+
+
 # Elegoo Saturn 3 Ultra Custom Firmware 
 
 This repository contains the custom firmware for the Elegoo Saturn 3 Ultra. This firmware is currently under heavy development, and it's designed to provide more control and functionality to your 3D printer. 
