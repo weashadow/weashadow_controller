@@ -1,21 +1,25 @@
 extern crate alloc;
-use std::{
-    io::{self, Write},
-    time::{self, Instant},
-};
+use std::time::{self, Duration, Instant};
 
 use alloc::rc::Rc;
 use framebuffer::Framebuffer;
-use slint::platform::{software_renderer::MinimalSoftwareWindow, Platform };
+use i_slint_core::software_renderer::WindowRotation;
+use slint::{
+    platform::{software_renderer::MinimalSoftwareWindow, Platform},
+    PlatformError,
+};
+
+use super::pixel::BGRAPixel;
 
 slint::include_modules!();
 
-const DISPLAY_WIDTH: usize = 800;
-const DISPLAY_HEIGHT: usize = 480;
+const DISPLAY_WIDTH: u32 = 800;
+const DISPLAY_HEIGHT: u32 = 480;
 
 struct TouchScreen {
     window: Rc<MinimalSoftwareWindow>,
-    framebuffer: Framebuffer,
+    // framebuffer: Framebuffer,
+    // pixels: &'a mut [BGRAPixel],
     timer: time::Instant,
 }
 
@@ -29,42 +33,42 @@ impl Platform for TouchScreen {
         self.timer.elapsed()
     }
     fn run_event_loop(&self) -> Result<(), slint::PlatformError> {
+        let mut framebuffer = Framebuffer::new("/dev/fb0").unwrap();
+        let (_, pixels, _) = unsafe { framebuffer.frame.align_to_mut::<BGRAPixel>() };
+        let half_pixels: &mut [BGRAPixel] = &mut pixels[0..384000];
         loop {
+            self.window.draw_if_needed(|renderer| {
+                renderer.set_window_rotation(WindowRotation::Rotate90);
+                renderer.render(half_pixels, DISPLAY_HEIGHT as usize);
+
+                if !self.window.has_active_animations() {
+                    std::thread::sleep(
+                        slint::platform::duration_until_next_timer_update()
+                            .unwrap_or(Duration::from_secs(1)),
+                    );
+                }
+            });
         }
     }
 }
 
-pub fn display() -> io::Result<()> {
-    let mut framebuffer = Framebuffer::new("/dev/fb0").unwrap();
-    let h = framebuffer.var_screen_info.yres;
-    let line_length = framebuffer.fix_screen_info.line_length;
-    let bytespp = framebuffer.var_screen_info.bits_per_pixel / 8;
-
-    println!(
-        "h: {}, line_length: {}, bytespp: {}",
-        h, line_length, bytespp
-    );
-
-    // let mut frame = vec![0u8; 3072000 as usize];
-    // frame.fill(0xff);
-    // let _ = framebuffer.write_frame(&frame);
+pub fn display() -> Result<(), PlatformError> {
 
     let window = MinimalSoftwareWindow::new(
         slint::platform::software_renderer::RepaintBufferType::ReusedBuffer,
     );
 
+    window.set_size(slint::PhysicalSize::new(DISPLAY_WIDTH, DISPLAY_HEIGHT));
+
     slint::platform::set_platform(Box::new(TouchScreen {
         window: window.clone(),
-        framebuffer,
+        // framebuffer,
         timer: Instant::now(),
+        // pixels,
     }))
     .unwrap();
 
-    let ui = AppWindow::new();
-    // ... setup callback and properties on `ui` ...
-
-    // Make sure the window covers our entire screen.
-    window.set_size(slint::PhysicalSize::new(320, 240));
-
-    Ok(())
+    let ui = AppWindow::new().unwrap();
+    let ui_handle = ui.as_weak();
+    ui.run()
 }

@@ -4211,28 +4211,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ultraultra"
-version = "0.1.0"
-dependencies = [
- "byteorder",
- "clap",
- "derivative",
- "framebuffer",
- "hex",
- "i2cdev",
- "ioctl-sys",
- "memmap2 0.9.0",
- "nix 0.27.1",
- "slint",
- "slint-build",
- "snafu",
- "spidev",
- "sysfs-pwm",
- "sysfs_gpio",
- "timer",
-]
-
-[[package]]
 name = "unicode-bidi"
 version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4625,6 +4603,30 @@ dependencies = [
  "log",
  "once_cell",
  "pkg-config",
+]
+
+[[package]]
+name = "weashadow_client"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "byteorder",
+ "clap",
+ "derivative",
+ "framebuffer",
+ "hex",
+ "i-slint-core",
+ "i2cdev",
+ "ioctl-sys",
+ "memmap2 0.9.0",
+ "nix 0.27.1",
+ "slint",
+ "slint-build",
+ "snafu",
+ "spidev",
+ "sysfs-pwm",
+ "sysfs_gpio",
+ "timer",
 ]
 
 [[package]]

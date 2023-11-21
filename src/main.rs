@@ -1,5 +1,6 @@
 mod hardware;
 mod ui;
+mod printer;
 use std::{thread, time::Duration, fs};
 
 use clap::Parser;

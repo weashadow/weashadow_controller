@@ -8,6 +8,8 @@ export component AppWindow inherits Window {
     VerticalBox { 
         Text {
             text: "Counter: \{root.counter}";
+            font-size: 50px;
+            horizontal-alignment: center;
         }
         Button {
             text: "Increase value";
@@ -15,6 +17,7 @@ export component AppWindow inherits Window {
                 root.request-increase-value();
             }
         }
-        AboutSlint { }
+        AboutSlint {
+        }
      }
 }
