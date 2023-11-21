@@ -38,6 +38,9 @@ impl Platform for TouchScreen {
         let half_pixels: &mut [BGRAPixel] = &mut pixels[0..384000];
         loop {
             self.window.draw_if_needed(|renderer| {
+                // if let Some(event) = check_for_touch_event(/*...*/) {
+                //     window.dispatch_event(event);
+                // }
                 renderer.set_window_rotation(WindowRotation::Rotate90);
                 renderer.render(half_pixels, DISPLAY_HEIGHT as usize);
 
