@@ -7,6 +7,7 @@ pub mod command_mode;
 pub mod gpio;
 pub mod spi;
 pub mod uv_light;
+pub mod touch_screen;
 
 pub struct Hardware {
     pub axis: axis::Axis,

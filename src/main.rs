@@ -4,6 +4,7 @@ mod printer;
 use std::{thread, time::Duration, fs};
 
 use clap::Parser;
+use hardware::touch_screen::test_touch_screen;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -26,6 +27,10 @@ struct Args {
 
     #[arg(short, long)]
     display: bool,
+
+    /// Test touch screen
+    #[arg(short, long)]
+    touch_screen: bool,
 }
 
 fn main() {
@@ -63,6 +68,9 @@ fn main() {
     }
     if args.display {
         ui::ui::display().unwrap();
+    }
+    if args.touch_screen {
+        test_touch_screen();
     }
 
 }
